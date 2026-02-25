@@ -9,6 +9,7 @@ import '../../services/ai_model/ai_model_service.dart';
 import '../../services/ai_model/model_state.dart';
 import '../../services/biometric_service.dart';
 import '../../services/onboarding_service.dart';
+import '../../services/theme_service.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -73,6 +74,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go('/settings/reports'),
           ),
+          const _SettingsDivider(),
+          const _SectionHeader(title: 'Appearance'),
+          _AppearanceTile(),
           const _SettingsDivider(),
           const _SectionHeader(title: 'Security'),
           FutureBuilder<BiometricType?>(
@@ -170,6 +174,94 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (!mounted) return;
       context.go('/onboarding');
     }
+  }
+}
+
+class _AppearanceTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeMode themeMode = ref.watch(themeServiceProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final String currentLabel = switch (themeMode) {
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+      ThemeMode.system => 'System',
+    };
+
+    return ListTile(
+      leading: Icon(switch (themeMode) {
+        ThemeMode.light => Icons.light_mode_outlined,
+        ThemeMode.dark => Icons.dark_mode_outlined,
+        ThemeMode.system => Icons.brightness_auto_outlined,
+      }),
+      title: const Text('Theme'),
+      subtitle: const Text('Choose your preferred appearance'),
+      trailing: Text(
+        currentLabel,
+        style: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+      onTap: () => _showThemePicker(context, ref, themeMode),
+    );
+  }
+
+  void _showThemePicker(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode current,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Theme'),
+        children: ThemeMode.values.map((ThemeMode mode) {
+          final (IconData icon, String label) = switch (mode) {
+            ThemeMode.light => (Icons.light_mode_outlined, 'Light'),
+            ThemeMode.dark => (Icons.dark_mode_outlined, 'Dark'),
+            ThemeMode.system => (Icons.brightness_auto_outlined, 'System'),
+          };
+          return SimpleDialogOption(
+            onPressed: () {
+              ref.read(themeServiceProvider.notifier).setThemeMode(mode);
+              Navigator.of(ctx).pop();
+            },
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: mode == current
+                      ? Theme.of(ctx).colorScheme.primary
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: mode == current
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                    color: mode == current
+                        ? Theme.of(ctx).colorScheme.primary
+                        : null,
+                  ),
+                ),
+                const Spacer(),
+                if (mode == current)
+                  Icon(
+                    Icons.check,
+                    size: 18,
+                    color: Theme.of(ctx).colorScheme.primary,
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
 

@@ -6,7 +6,7 @@ part of 'biometric_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$biometricServiceHash() => r'40b805e0c948fb403d8806e5234ccb3ea4385c09';
+String _$biometricServiceHash() => r'7e7b8b5c857fd9a9e224e6d43d6b80181a000661';
 
 /// See also [BiometricService].
 @ProviderFor(BiometricService)

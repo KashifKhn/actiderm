@@ -7,6 +7,7 @@ import 'package:local_auth/local_auth.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'services/biometric_service.dart';
+import 'services/theme_service.dart';
 
 class ActiDermApp extends ConsumerStatefulWidget {
   const ActiDermApp({super.key});
@@ -26,6 +27,7 @@ class _ActiDermAppState extends ConsumerState<ActiDermApp> {
       onResume: _onAppResume,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(themeServiceProvider.notifier).initialize();
       await ref.read(biometricServiceProvider.notifier).initialize();
       if (ref.read(biometricServiceProvider).isLocked) {
         await ref.read(biometricServiceProvider.notifier).authenticate();
@@ -53,12 +55,13 @@ class _ActiDermAppState extends ConsumerState<ActiDermApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final isLocked = ref.watch(biometricServiceProvider).isLocked;
+    final themeMode = ref.watch(themeServiceProvider);
 
     return MaterialApp.router(
       title: 'ActiDerm',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) => Stack(
