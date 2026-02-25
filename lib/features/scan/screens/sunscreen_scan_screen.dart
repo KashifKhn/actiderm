@@ -76,7 +76,7 @@ class _SunscreenScanScreenState extends ConsumerState<SunscreenScanScreen> {
     });
 
     _sub = service
-        .analyzeStreamingTokens(bytes)
+        .analyzeStreamingTokensForSunscreen(bytes)
         .listen(
           (chunk) {
             if (!mounted) return;

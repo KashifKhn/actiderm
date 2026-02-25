@@ -2,6 +2,8 @@ import 'package:local_auth/local_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/constants/app_constants.dart';
+
 part 'biometric_service.g.dart';
 
 class BiometricState {
@@ -22,7 +24,7 @@ class BiometricState {
 class BiometricService extends _$BiometricService {
   final LocalAuthentication _auth = LocalAuthentication();
 
-  static const String _prefKey = 'biometricEnabled';
+  static const String _prefKey = PrefsKeys.biometricLockEnabled;
 
   @override
   BiometricState build() => const BiometricState();

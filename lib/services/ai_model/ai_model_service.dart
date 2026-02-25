@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../data/models/skin_analysis.dart';
 import 'model_state.dart';
 
@@ -15,8 +16,9 @@ class AiModelService extends _$AiModelService {
   InferenceModel? _model;
   Timer? _unloadTimer;
 
-  static const int _autoUnloadSeconds = 120;
-  static const String _prompt = 'skin extract';
+  static const int _autoUnloadSeconds = AppConstants.modelAutoUnloadSeconds;
+  static const String _skinPrompt = AppConstants.skinExtractPrompt;
+  static const String _sunscreenPrompt = AppConstants.sunscreenExtractPrompt;
 
   @override
   ModelState build() => const Idle();
@@ -45,7 +47,7 @@ class AiModelService extends _$AiModelService {
     state = const Loading();
     try {
       _model = await FlutterGemma.getActiveModel(
-        maxTokens: 2048,
+        maxTokens: AppConstants.maxTokens,
         preferredBackend: PreferredBackend.gpu,
       );
       state = const Ready();
@@ -71,7 +73,7 @@ class AiModelService extends _$AiModelService {
       try {
         await session.addQueryChunk(
           Message.withImage(
-            text: _prompt,
+            text: _skinPrompt,
             imageBytes: imageBytes,
             isUser: true,
           ),
@@ -90,6 +92,16 @@ class AiModelService extends _$AiModelService {
   }
 
   Stream<String> analyzeStreamingTokens(Uint8List imageBytes) async* {
+    yield* _streamWithPrompt(imageBytes, _skinPrompt);
+  }
+
+  Stream<String> analyzeStreamingTokensForSunscreen(
+    Uint8List imageBytes,
+  ) async* {
+    yield* _streamWithPrompt(imageBytes, _sunscreenPrompt);
+  }
+
+  Stream<String> _streamWithPrompt(Uint8List imageBytes, String prompt) async* {
     final model = _model;
     if (model == null) return;
 
@@ -105,11 +117,7 @@ class AiModelService extends _$AiModelService {
       );
       try {
         await session.addQueryChunk(
-          Message.withImage(
-            text: _prompt,
-            imageBytes: imageBytes,
-            isUser: true,
-          ),
+          Message.withImage(text: prompt, imageBytes: imageBytes, isUser: true),
         );
         final response = await session.getResponse();
         const chunkSize = 6;

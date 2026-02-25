@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/constants/app_constants.dart';
+
 part 'onboarding_service.g.dart';
 
 enum AgeRange {
@@ -177,27 +179,33 @@ class OnboardingService extends _$OnboardingService {
 
   Future<void> saveOnboardingCompletion() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCompletedOnboarding', true);
+    await prefs.setBool(PrefsKeys.hasCompletedOnboarding, true);
     if (state.selectedAge != null) {
-      await prefs.setString('selectedAge', state.selectedAge!.name);
+      await prefs.setString(PrefsKeys.userAge, state.selectedAge!.name);
     }
     if (state.selectedSkinType != null) {
-      await prefs.setString('selectedSkinType', state.selectedSkinType!.name);
+      await prefs.setString(
+        PrefsKeys.userSkinType,
+        state.selectedSkinType!.name,
+      );
     }
     if (state.selectedSunExposure != null) {
       await prefs.setString(
-        'selectedSunExposure',
+        PrefsKeys.userSunExposure,
         state.selectedSunExposure!.name,
       );
     }
-    await prefs.setString('reminderFrequency', state.selectedReminder.name);
+    await prefs.setString(
+      PrefsKeys.userReminderFrequency,
+      state.selectedReminder.name,
+    );
     await _scheduleReminder(state.selectedReminder);
     state = state.copyWith(isComplete: true);
   }
 
   Future<void> resetOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCompletedOnboarding', false);
+    await prefs.setBool(PrefsKeys.hasCompletedOnboarding, false);
     await _notifications.cancel(_notificationId);
     state = const OnboardingState();
   }
@@ -234,18 +242,13 @@ class OnboardingService extends _$OnboardingService {
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         );
       case ReminderFrequency.biweekly:
-        final scheduledDate = tz.TZDateTime.now(
-          tz.local,
-        ).add(const Duration(days: 14));
-        await _notifications.zonedSchedule(
+        await _notifications.periodicallyShowWithDuration(
           _notificationId,
           title,
           body,
-          scheduledDate,
+          const Duration(days: 14),
           details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       case ReminderFrequency.monthly:
         final scheduledDate = tz.TZDateTime.now(
@@ -263,18 +266,13 @@ class OnboardingService extends _$OnboardingService {
           matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
         );
       case ReminderFrequency.quarterly:
-        final scheduledDate = tz.TZDateTime.now(
-          tz.local,
-        ).add(const Duration(days: 90));
-        await _notifications.zonedSchedule(
+        await _notifications.periodicallyShowWithDuration(
           _notificationId,
           title,
           body,
-          scheduledDate,
+          const Duration(days: 90),
           details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       case ReminderFrequency.never:
         break;
